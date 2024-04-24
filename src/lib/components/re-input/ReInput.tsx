@@ -2,22 +2,28 @@ import { useContext, useEffect, useState, startTransition, useRef } from 'react'
 import { FormContext } from '../re-form';
 import { z } from 'zod';
 
-export type ReInputRendererProps = {
-    value: any;
+// Value can be undefined when
+// 1. Optional property
+// 2. Initial form values not provided
+export type ReInputRendererProps<R> = {
+    value: R;
     property: string;
+    defaultValue?: R;
     errors?: z.ZodIssue[];
-    onChange: (value: string) => void;
+    onChange: (value: R) => void;
     onBlur: () => void;
 };
 
-type ReInputProps<T> = {
+export type ReInputProps<T, R> = {
     property: T;
-    renderer: (props: ReInputRendererProps) => JSX.Element;
+    defaultValue?: R;
+    renderer: (props: ReInputRendererProps<R>) => JSX.Element;
 };
 
-export function ReInput<T>(props: ReInputProps<T>) {
+export function ReInput<T, R>(props: ReInputProps<T, R>) {
     // Hooks
     const {
+        setDefaultValue,
         setInputValue,
         getFormInputValue,
         getFormErrors,
@@ -28,14 +34,18 @@ export function ReInput<T>(props: ReInputProps<T>) {
     } = useContext(FormContext);
 
     // State
-    const [value, setValue] = useState(getFormInputValue(props.property as string));
+    const [value, setValue] = useState(() => {
+        const inputValue = getFormInputValue(props.property as string) as R;
+        if (inputValue === undefined) return props.defaultValue as R;
+        return inputValue;
+    });
     const [errors, setErrors] = useState<z.ZodIssue[]>();
 
     // References
     const hasBeenBlurredBeforeRef = useRef(false);
 
     // Methods
-    const onChange = (value: string) => {
+    const onChange = (value: R) => {
         const _errors = setInputValue(props.property as string, value);
 
         startTransition(() => {
@@ -55,7 +65,7 @@ export function ReInput<T>(props: ReInputProps<T>) {
         hasBeenBlurredBeforeRef.current = true;
 
         const formErrors = getFormErrors();
-        const inputErrors = formErrors?.filter(fe => fe.path[0] === props.property);
+        const inputErrors = formErrors?.filter(fe => fe.path.join('.') === props.property);
 
         setErrors(inputErrors);
     };
@@ -72,7 +82,7 @@ export function ReInput<T>(props: ReInputProps<T>) {
         if (!hasBeenBlurredBeforeRef.current) return;
 
         // Update errors
-        const inputErrors = errors?.filter(fe => fe.path[0] === props.property);
+        const inputErrors = errors?.filter(fe => fe.path.join('.') === props.property);
 
         setErrors(inputErrors);
     };
@@ -83,6 +93,10 @@ export function ReInput<T>(props: ReInputProps<T>) {
 
     // Effects
     useEffect(() => {
+        if (props.defaultValue !== undefined) {
+            setDefaultValue(props.property as string, value);
+        }
+
         subscribeToFormInputErrorsUpdates(onFormInputErrorsUpdate);
         subscribeToFormForceValueUpdates(onForceValueUpdate);
 
@@ -98,6 +112,7 @@ export function ReInput<T>(props: ReInputProps<T>) {
             property={props.property as string}
             value={value}
             errors={errors}
+            defaultValue={props.defaultValue}
             onChange={onChange}
             onBlur={onBlur}
         />

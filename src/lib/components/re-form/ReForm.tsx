@@ -2,6 +2,7 @@ import { createContext, useRef } from 'react';
 import { ReactNode } from 'react';
 import { ZodIssue, z } from 'zod';
 import { areObjectsEqual } from '../../utils/equals';
+import { getPropertyValueByDottedPath, setObjectNestedProperty } from '../../utils/objects';
 
 export type FormInputErrorsObserver = (
     inputKey: string,
@@ -17,6 +18,7 @@ type AnyObject = { [key: string]: any };
 
 type FormContextType = {
     // Setters
+    setDefaultValue: (inputKey: string, inputValue: any) => void;
     setInputValue: (inputKey: string, inputValue: any) => z.ZodIssue[] | undefined;
 
     // Getters
@@ -37,15 +39,16 @@ export const FormContext = createContext<FormContextType>({} as FormContextType)
 
 // Todo: optional field should not be returned when empty
 // Todo: add is loading
-// Todo: add nested path
-// Todo: initial value validation should
-// Todo: Add profile form (for loading testing)
+// Todo: tests for nested path
+// Todo: handle boolean: un campo booleano, se non viene inizializzato causerà un errore di validazione di zod. Dovrebbe invece essere inizializzato a false in quel caso
+
+// Todo: strip undefined properties from unSubmit
 
 export type ReFormProps<I> = {
     children: ReactNode;
 
     validator: ZodDefinition;
-    initialValue: I;
+    initialValue?: I;
     requiresFirstChangeToEnable?: boolean;
 
     // Todo: test re render
@@ -104,16 +107,51 @@ export function ReForm<I>(props: ReFormProps<I>) {
         formIssuesRef.current = undefined;
     };
 
+    // Set a default value without re-renders
+    const setDefaultValue = (inputKey: string, inputValue: any) => {
+        // Check if validator is defined
+        const validator = formValidatorRef.current;
+        if (!validator) throw new Error('Form not initialized');
+
+        // Set default value only if specified value is undefined
+        const currentInputValue = getFormInputValue(inputKey);
+        if (currentInputValue !== undefined) return;
+
+        // Update form values
+        if (inputKey.includes('.')) {
+            formValueRef.current = setObjectNestedProperty(
+                formValueRef.current,
+                inputKey,
+                inputValue
+            );
+        } else {
+            formValueRef.current = {
+                ...formValueRef.current,
+                [inputKey]: inputValue
+            } as I;
+        }
+    };
+
     const setInputValue = (inputKey: string, inputValue: any) => {
-        // Check if it's already present
+        // Check if validator is defined
         const validator = formValidatorRef.current;
         if (!validator) throw new Error('Form not initialized');
 
         // Update form values
-        formValueRef.current = {
-            ...formValueRef.current,
-            [inputKey]: inputValue
-        } as I;
+        if (inputKey.includes('.')) {
+            formValueRef.current = setObjectNestedProperty(
+                formValueRef.current,
+                inputKey,
+                inputValue
+            );
+        } else {
+            formValueRef.current = {
+                ...formValueRef.current,
+                [inputKey]: inputValue
+            } as I;
+        }
+
+        // Notify subcriber
         notifyFormValueSubscribers();
 
         // Parse
@@ -123,7 +161,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
         if (!validationResult.success) {
             formIssuesRef.current = validationResult.error.errors;
             notifyFormInputErrorsSubscribers(inputKey, validationResult.error.errors);
-            return validationResult.error.errors.filter(e => e.path[0] === inputKey);
+            return validationResult.error.errors.filter(e => e.path.join('.') === inputKey);
         } else {
             formIssuesRef.current = undefined;
         }
@@ -145,7 +183,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
         if (!validationResult.success) {
             formIssuesRef.current = validationResult.error.errors;
 
-            const keys = validationResult.error.errors.map(e => e.path[0]) as string[];
+            const keys = validationResult.error.errors.map(e => e.path.join('.')) as string[];
 
             keys.forEach(key =>
                 notifyFormInputErrorsSubscribers(key, validationResult.error.errors, true)
@@ -179,8 +217,12 @@ export function ReForm<I>(props: ReFormProps<I>) {
     };
 
     const getFormInputValue = (inputKey: string) => {
-        // Get value
-        return (formValueRef.current as any)?.[inputKey] ?? '';
+        // Search nested value
+        if (inputKey.includes('.'))
+            return getPropertyValueByDottedPath(formValueRef.current, inputKey);
+
+        // Search top level value
+        return (formValueRef.current as any)?.[inputKey];
     };
 
     // Form input errors updated
@@ -236,6 +278,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
     return (
         <FormContext.Provider
             value={{
+                setDefaultValue,
                 setInputValue,
                 getFormValue,
                 getFormInputValue,

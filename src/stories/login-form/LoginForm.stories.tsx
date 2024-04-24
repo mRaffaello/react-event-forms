@@ -10,10 +10,7 @@ export default {
 } as Meta<typeof LoginForm>;
 
 const TemplatePrimary: StoryFn<typeof LoginForm> = () => (
-    <LoginForm
-        onSubmit={value => console.log('Submitting', value)}
-        initialValue={{ email: '', password: '' }}
-    />
+    <LoginForm onSubmit={value => console.log('Submitting', value)} />
 );
 const TemplateWithSubComponent: StoryFn<typeof LoginFormWithSubComponent> = () => (
     <LoginFormWithSubComponent />

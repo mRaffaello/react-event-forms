@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { useForm } from '../../lib';
-import { EmailInputRenderer, PasswordInputRenderer } from '../common/InputRenderers';
+import { EmailInputRenderer, PasswordInputRenderer } from '../common/TextInputRenderers';
 import { ButtonRenderer } from '../common/ButtonRenderer';
 import { useEffect } from 'react';
 
@@ -24,7 +24,7 @@ export function ProfileFormWithRenderCounts(props: {
     onSubmit?: (value: ProfileFormRequest) => void;
 }) {
     // Hooks
-    const form = useForm(ProfileFormRequestSchema);
+    const form = useForm(ProfileFormRequestSchema, props.initialValue);
 
     // Effects
     useEffect(() => {
@@ -33,7 +33,7 @@ export function ProfileFormWithRenderCounts(props: {
 
     // Render
     return (
-        <form.context onSubmit={props.onSubmit} initialValue={props.initialValue}>
+        <form.context onSubmit={props.onSubmit}>
             <form.field
                 property='email'
                 renderer={_props => (

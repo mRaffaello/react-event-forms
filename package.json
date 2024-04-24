@@ -1,7 +1,7 @@
 {
     "name": "react-event-forms",
     "private": false,
-    "version": "0.1.0",
+    "version": "0.2.0",
     "author": "Marco Raffaello",
     "repository": {
         "type": "git",
@@ -32,8 +32,8 @@
         "lint": "eslint --ext .js,.jsx,.ts,.tsx --fix",
         "prettier": "prettier --write \"src/**/*.{ts,tsx,js,mdx}\"",
         "prepare": "husky install",
-        "test": "vitest",
-        "test:single": "vitest run",
+        "test": "vitest --typecheck",
+        "test:single": "vitest run --typecheck",
         "coverage": "vitest run --coverage"
     },
     "devDependencies": {

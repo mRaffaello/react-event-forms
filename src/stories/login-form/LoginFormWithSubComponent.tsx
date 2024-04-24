@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { useForm } from '../../lib';
 import { useFormField } from '../../lib/hooks/useFormField';
-import { EmailInputRenderer, PasswordInputRenderer } from '../common/InputRenderers';
+import { EmailInputRenderer, PasswordInputRenderer } from '../common/TextInputRenderers';
 
 const LoginFormRequestSchema = z.object({
     email: z.string().email('Invalid email format'),
@@ -12,7 +12,10 @@ type LoginFormRequest = z.infer<typeof LoginFormRequestSchema>;
 
 export function LoginFormWithSubComponent() {
     // Hooks
-    const form = useForm(LoginFormRequestSchema);
+    const form = useForm(LoginFormRequestSchema, {
+        email: '',
+        password: ''
+    });
 
     // Methods
     const onSubmit = (value: LoginFormRequest) => {
@@ -21,12 +24,7 @@ export function LoginFormWithSubComponent() {
 
     // Render
     return (
-        <form.context
-            onSubmit={onSubmit}
-            initialValue={{
-                email: '',
-                password: ''
-            }}>
+        <form.context onSubmit={onSubmit}>
             <LoginFormEmailField />
             <p>Password</p>
             <form.field property='password' renderer={PasswordInputRenderer} />

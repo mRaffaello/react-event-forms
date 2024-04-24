@@ -1,34 +1,28 @@
-import { ReInput } from '../components';
+import { ReInput, ReInputProps } from '../components';
 import { ZodType, z } from 'zod';
-import { NestedKeyOfWithOptionals } from '../types/structs';
 import { ReForm, ReFormProps, ZodDefinition } from '../components/re-form/ReForm';
 import { ReButton } from '../components/re-button/ReButton';
 import { ReSubscribe } from '../components/re-subscribe';
 import { ReactNode } from 'react';
+import { ExtractFieldType, NestedKeyOf } from '../types/structs';
 
-/* export const schemaForType =
-    <T>() =>
-    <S extends z.ZodType<T, any, any>>(arg: S) => {
-        return arg;
-    }; */
-
-/* export function useFormOld<T extends ZodType<any, any, any>>() {
+export function useForm<T extends ZodType<any, any, any>>(validator: T, initialValue?: z.infer<T>) {
     type InferedType = z.infer<T>;
-    return {
-        context: ReForm<InferedType>,
-        field: ReInput<NestedKeyOfWithOptionals<InferedType>>,
-        subscribe: ReSubscribe<InferedType>,
-        button: ReButton
-    };
-} */
 
-export function useForm<T extends ZodType<any, any, any>>(validator: T) {
-    type InferedType = z.infer<T>;
     return {
-        context: (props: Omit<ReFormProps<InferedType>, 'validator'>) => (
-            <ReForm {...props} validator={validator as unknown as ZodDefinition} />
+        context: (props: Omit<ReFormProps<InferedType>, 'validator' | 'initialValue'>) => (
+            <ReForm
+                {...props}
+                validator={validator as unknown as ZodDefinition}
+                initialValue={initialValue}
+            />
         ),
-        field: ReInput<NestedKeyOfWithOptionals<InferedType>>,
+        field: <Property extends NestedKeyOf<InferedType>>(
+            props: ReInputProps<Property, ExtractFieldType<InferedType, Property>>
+        ) => <ReInput {...props} />,
+        safeField: <Property extends NestedKeyOf<InferedType>>(
+            props: ReInputProps<Property, NonNullable<ExtractFieldType<InferedType, Property>>>
+        ) => <ReInput {...props} />,
         subscribe: <R,>(props: {
             selector: (value: InferedType) => R;
             children: (subscribedValue: R) => ReactNode;

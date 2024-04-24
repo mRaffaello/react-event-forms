@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from '../../lib';
-import { EmailInputRenderer, PasswordInputRenderer } from '../common/InputRenderers';
+import { EmailInputRenderer, PasswordInputRenderer } from '../common/TextInputRenderers';
 import { ButtonRenderer } from '../common/ButtonRenderer';
 
 const LoginFormRequestSchema = z.object({
@@ -18,7 +18,10 @@ export function LoginFormWithRenderCounts(props: {
     onSubmit?: (value: LoginFormRequest) => void;
 }) {
     // Hooks
-    const form = useForm(LoginFormRequestSchema);
+    const form = useForm(LoginFormRequestSchema, {
+        email: '',
+        password: ''
+    });
 
     useEffect(() => {
         props.onContextRenderCount();
@@ -26,12 +29,7 @@ export function LoginFormWithRenderCounts(props: {
 
     // Render
     return (
-        <form.context
-            onSubmit={props.onSubmit}
-            initialValue={{
-                email: '',
-                password: ''
-            }}>
+        <form.context onSubmit={props.onSubmit}>
             <form.field
                 property='email'
                 renderer={_props => (

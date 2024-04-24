@@ -9,14 +9,7 @@ export default {
 } as Meta<typeof ProfileForm>;
 
 const Template: StoryFn<typeof ProfileForm> = () => (
-    <ProfileForm
-        onSubmit={value => console.log('Submitting', value)}
-        initialValue={{
-            email: '',
-            firstName: '',
-            lastName: ''
-        }}
-    />
+    <ProfileForm onSubmit={value => console.log('Submitting', value)} />
 );
 
 export const Primary = Template.bind({});

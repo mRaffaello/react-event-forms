@@ -17,15 +17,7 @@ describe('Validate form without initial values', () => {
 
     beforeEach(() => {
         // Setup
-        const { getByTestId } = render(
-            <LoginForm
-                onSubmit={onSubmit}
-                initialValue={{
-                    email: '',
-                    password: ''
-                }}
-            />
-        );
+        const { getByTestId } = render(<LoginForm onSubmit={onSubmit} />);
 
         // Get the inputs
         emailField = getByTestId('email-field') as HTMLInputElement;
@@ -69,7 +61,6 @@ describe('Validate form without initial values', () => {
         // Blur and check for errors
         fireEvent.blur(emailField);
 
-        console.log(emailErrors.childNodes[0]);
         expect(emailErrors.childElementCount).toBe(0);
     });
 

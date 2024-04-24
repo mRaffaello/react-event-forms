@@ -1,30 +1,19 @@
-type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`;
-
-type OptionalPropertyOf<T extends object> = Exclude<
-    {
-        [K in keyof T]: T extends Record<K, T[K]> ? never : K;
-    }[keyof T],
-    undefined
->;
-
-export type NestedKeyOfWithOptionals<T> = (
-    T extends object
-        ? {
-              [K in Exclude<keyof T, symbol | 'length'>]: `${K}${DotPrefix<NestedKeyOf<T[K]>>}`;
-          }[Exclude<keyof T, symbol | 'length'>]
-        : ''
-) extends infer D
-    ? Extract<D, string>
+type Paths<T> = T extends object
+    ? { [K in keyof T]: `${Exclude<K, symbol>}${'' | `.${Paths<T[K]>}`}` }[keyof T]
     : never;
 
-export type NestedKeyOf<T> = (
-    T extends object
-        ? {
-              [K in Exclude<keyof T, symbol | OptionalPropertyOf<T> | 'length'>]: `${K}${DotPrefix<
-                  NestedKeyOf<T[K]>
-              >}`;
-          }[Exclude<keyof T, symbol | OptionalPropertyOf<T> | 'length'>]
-        : ''
-) extends infer D
-    ? Extract<D, string>
+type RecursiveNonNullable<T> = { [K in keyof T]-?: RecursiveNonNullable<NonNullable<T[K]>> };
+
+export type NestedKeyOf<T> = Paths<RecursiveNonNullable<T>>;
+
+export type ExtractFieldType<T, Path extends NestedKeyOf<T>> = Path extends keyof T
+    ? T[Path]
+    : Path extends `${infer K}.${infer Rest}`
+    ? K extends keyof T
+        ? T[K] extends object | undefined
+            ? Rest extends NestedKeyOf<NonNullable<T[K]>>
+                ? ExtractFieldType<NonNullable<T[K]>, Rest>
+                : never
+            : never
+        : never
     : never;
