@@ -4,10 +4,10 @@ Yet another react forms library
 
 ## Installation
 
-Install with your package manager
+Install with your package manager. Please note that zod is required as peer dependency.
 
 ```bash
-  pnpm add react-event-forms
+  pnpm add zod react-event-forms
 ```
 
 ## License

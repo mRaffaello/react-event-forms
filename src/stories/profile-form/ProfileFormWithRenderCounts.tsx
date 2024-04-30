@@ -67,7 +67,7 @@ export function ProfileFormWithRenderCounts(props: {
                     />
                 )}
             />
-            <form.subscribe selector={value => value.lastName.length > 3}>
+            <form.subscribe selector={value => (value?.lastName.length ?? 0) > 3}>
                 {hasMoreThan3Chars => (
                     <ReactiveText
                         hasMoreThan3Chars={hasMoreThan3Chars}

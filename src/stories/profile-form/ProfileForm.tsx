@@ -27,7 +27,7 @@ export function ProfileForm(props: { onSubmit?: (value: ProfileFormRequest) => v
             <form.field property='firstName' renderer={TextInputRenderer} />
             <form.field property='lastName' renderer={TextInputRenderer} />
             <form.field property='organization' renderer={PasswordInputRenderer} />
-            <form.subscribe selector={value => value.lastName.length > 3}>
+            <form.subscribe selector={value => value?.lastName.length ?? 0 > 3}>
                 {hasMoreThan3Chars =>
                     hasMoreThan3Chars ? (
                         <div>Last name has more than 3 characters</div>

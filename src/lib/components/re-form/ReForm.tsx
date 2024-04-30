@@ -1,4 +1,4 @@
-import { createContext, useRef } from 'react';
+import { createContext, FormEventHandler, useRef } from 'react';
 import { ReactNode } from 'react';
 import { ZodIssue, z } from 'zod';
 import { areObjectsEqual } from '../../utils/equals';
@@ -37,12 +37,18 @@ type FormContextType = {
 
 export const FormContext = createContext<FormContextType>({} as FormContextType);
 
-// Todo: optional field should not be returned when empty
+// Todo: optional field should not be returned when empty (strip undefined properties from unSubmit)
 // Todo: add is loading
-// Todo: tests for nested path
-// Todo: handle boolean: un campo booleano, se non viene inizializzato causerà un errore di validazione di zod. Dovrebbe invece essere inizializzato a false in quel caso
 
-// Todo: strip undefined properties from unSubmit
+// Todo: form.subscribe is broken when initial value is not set
+// Todo: refine not working. Fix and test it!!!
+// Todo: add validationBehaviour to field ('default' | 'withoutBlur' | 'onSubmit')
+
+// Todo: async validation. When a form is submitted and an api call is made, the user should have the ability to take the output of the api and show it as validation error
+export type ReFormRendererProps = {
+    children: ReactNode;
+    onSubmit: () => void;
+};
 
 export type ReFormProps<I> = {
     children: ReactNode;
@@ -303,9 +309,9 @@ ReForm.defaultProps = {
     requiresFirstChangeToEnable: true
 };
 
-export const DefaultFormRenderer = (props: { children: ReactNode; onSubmit: () => void }) => {
+export const DefaultFormRenderer = (props: ReFormRendererProps) => {
     // Methods
-    const onSubmit: React.FormEventHandler<HTMLFormElement> = e => {
+    const onSubmit: FormEventHandler<HTMLFormElement> = e => {
         e.preventDefault();
         props.onSubmit();
     };

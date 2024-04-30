@@ -4,7 +4,7 @@ export type ReButtonRendererProps = {
     isFormValid: boolean;
 };
 
-type ReButtonProps = {
+export type ReButtonProps = {
     renderer: (props: ReButtonRendererProps) => JSX.Element;
 };
 
