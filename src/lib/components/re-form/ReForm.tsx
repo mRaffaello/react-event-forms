@@ -2,10 +2,14 @@ import { createContext, FormEventHandler, useRef } from 'react';
 import { ReactNode } from 'react';
 import { ZodIssue, z } from 'zod';
 import { areObjectsEqual } from '../../utils/equals';
-import { getPropertyValueByDottedPath, setObjectNestedProperty } from '../../utils/objects';
+import {
+    getPropertyValueByDottedPath,
+    initializeEmptyObject,
+    setObjectNestedProperty
+} from '../../utils/objects';
 
 export type FormInputErrorsObserver = (
-    inputKey: string,
+    inputKey?: string,
     errors?: z.ZodIssue[],
     overrideBlurRequirement?: boolean
 ) => void;
@@ -39,11 +43,13 @@ export const FormContext = createContext<FormContextType>({} as FormContextType)
 
 // Todo: optional field should not be returned when empty (strip undefined properties from unSubmit)
 // Todo: add is loading
+// Todo: useForm value hook should work outside of context
 
-// Todo: form.subscribe is broken when initial value is not set
 // Todo: refine not working. Fix and test it!!!
-// Todo: add validationBehaviour to field ('default' | 'withoutBlur' | 'onSubmit')
 
+// Todo: implement onValid form callback. This is useful for filter form where an action should immediately take place
+
+// Todo: check that react-datepicker is not bundled with the library
 // Todo: async validation. When a form is submitted and an api call is made, the user should have the ability to take the output of the api and show it as validation error
 export type ReFormRendererProps = {
     children: ReactNode;
@@ -73,13 +79,15 @@ const getInitialErrors = <I,>(validator: ZodDefinition, initialValue?: I) => {
 
 export function ReForm<I>(props: ReFormProps<I>) {
     // References
-    const formValueRef = useRef<I | undefined>(props.initialValue);
+    const formValidatorRef = useRef<ZodDefinition>(props.validator);
+    const formValueRef = useRef<I | undefined>(
+        props.initialValue ?? initializeEmptyObject(props.validator as any)
+    );
+
     const formIssuesRef = useRef<z.ZodIssue[] | undefined>(
         getInitialErrors(props.validator, props.initialValue)
     );
     const initialValueRef = useRef(props.initialValue);
-
-    const formValidatorRef = useRef<ZodDefinition>(props.validator);
 
     const formInputErrorsObserversRef = useRef<FormInputErrorsObserver[]>([]);
     const formValueObserversRef = useRef<FormValueObserver[]>([]);
@@ -157,7 +165,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
             } as I;
         }
 
-        // Notify subcriber
+        // Notify subscribers
         notifyFormValueSubscribers();
 
         // Parse
@@ -197,6 +205,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
 
             return validationResult.error.errors;
         } else {
+            notifyFormInputErrorsSubscribers(undefined, undefined, true);
             formIssuesRef.current = undefined;
         }
     };
@@ -243,7 +252,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
     };
 
     const notifyFormInputErrorsSubscribers = (
-        inputKey: string,
+        inputKey?: string,
         errors?: z.ZodIssue[],
         force?: boolean
     ) => {

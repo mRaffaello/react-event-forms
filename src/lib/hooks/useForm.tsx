@@ -2,7 +2,7 @@ import { ReInput, ReInputProps } from '../components';
 import { ZodType, z } from 'zod';
 import { ReForm, ReButton, ReSubscribe, ReFormProps, ZodDefinition } from '../components';
 import { ReactNode } from 'react';
-import { ExtractFieldType, NestedKeyOf } from '../types/structs';
+import { DeepPartial, ExtractFieldType, NestedKeyOf } from '../types/structs';
 
 // Todo: memoize result
 export function useForm<T extends ZodType<any, any, any>>(validator: T, initialValue?: z.infer<T>) {
@@ -23,7 +23,7 @@ export function useForm<T extends ZodType<any, any, any>>(validator: T, initialV
             props: ReInputProps<Property, NonNullable<ExtractFieldType<InferredType, Property>>>
         ) => <ReInput {...props} />,
         subscribe: <R,>(props: {
-            selector: (value: InferredType | undefined) => R;
+            selector: (value: DeepPartial<InferredType> | undefined) => R;
             children: (subscribedValue: R) => ReactNode;
         }) => <ReSubscribe<InferredType, R> {...props} />,
         button: ReButton

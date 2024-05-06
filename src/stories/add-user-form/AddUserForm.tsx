@@ -5,7 +5,7 @@ import {
     NumberInputRenderer,
     TextInputRenderer
 } from '../common/TextInputRenderers';
-import { ButtonRenderer } from '../common/ButtonRenderer';
+import { ButtonRenderer, ButtonRendererWithoutDisable } from '../common/ButtonRenderer';
 import { CheckboxRenderer } from '../common/CheckboxInputRenderer';
 import { SelectRenderer } from '../common/SelectRenderer';
 
@@ -36,6 +36,7 @@ type AddUserFormRequest = z.infer<typeof AddUserFormRequestSchema>;
 export function AddUserForm(props: {
     initialValue?: AddUserFormRequest;
     defaultEnabled?: boolean;
+    initiallyDisabled?: boolean;
     onSubmit?: (value: AddUserFormRequest) => void;
 }) {
     // Hooks
@@ -65,7 +66,11 @@ export function AddUserForm(props: {
             <form.field property='organization.name' renderer={TextInputRenderer} />
             <form.field property='organization.vat' renderer={TextInputRenderer} />
 
-            <form.button renderer={ButtonRenderer} />
+            {props.initiallyDisabled ? (
+                <form.button renderer={ButtonRendererWithoutDisable} />
+            ) : (
+                <form.button renderer={ButtonRenderer} />
+            )}
         </form.context>
     );
 }

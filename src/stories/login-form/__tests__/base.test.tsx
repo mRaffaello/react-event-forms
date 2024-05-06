@@ -28,7 +28,7 @@ describe('Validate form without initial values', () => {
         passwordErrors = getByTestId('password-errors');
 
         // Get submit button
-        submitButton = getByTestId('submit-buttom') as HTMLButtonElement;
+        submitButton = getByTestId('submit-button') as HTMLButtonElement;
 
         // Check that there are initially no errors
         expect(emailErrors.childElementCount).toBe(0);
@@ -61,6 +61,14 @@ describe('Validate form without initial values', () => {
         // Blur and check for errors
         fireEvent.blur(emailField);
 
+        // Expect element to not have been validated
+        expect(emailErrors.childElementCount).toBe(0);
+
+        // Type a password
+        await userEvent.type(passwordField, 'invalid');
+        fireEvent.blur(emailField);
+
+        // Email should still not be validated
         expect(emailErrors.childElementCount).toBe(0);
     });
 

@@ -32,7 +32,7 @@ describe('Validate form with correct initial values', () => {
         passwordErrors = getByTestId('password-errors');
 
         // Get submit button
-        submitButton = getByTestId('submit-buttom') as HTMLButtonElement;
+        submitButton = getByTestId('submit-button') as HTMLButtonElement;
 
         // Check that there are initially no errors
         expect(emailErrors.childElementCount).toBe(0);
@@ -96,7 +96,7 @@ describe('Validate form with incorrect initial values', () => {
         passwordErrors = getByTestId('password-errors');
 
         // Get submit button
-        submitButton = getByTestId('submit-buttom') as HTMLButtonElement;
+        submitButton = getByTestId('submit-button') as HTMLButtonElement;
 
         // Check that there are initially no errors
         expect(emailErrors.childElementCount).toBe(0);

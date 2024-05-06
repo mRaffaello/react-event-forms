@@ -51,7 +51,7 @@ describe('Validate form without initial values', () => {
         organizationVatErrors = getByTestId('organization.vat-errors');
 
         // Get submit button
-        submitButton = getByTestId('submit-buttom') as HTMLButtonElement;
+        submitButton = getByTestId('submit-button') as HTMLButtonElement;
     });
 
     afterEach(() => {
@@ -143,6 +143,8 @@ describe('Validate form without initial values', () => {
         // Check that form is valid and submit works
         expect(submitButton).toBeEnabled();
         await userEvent.keyboard('{enter}');
+
+        // Todo: since form is valid, enter triggers both form submission and onKeyDown submission
         expect(onSubmit).toHaveBeenCalledOnce();
         expect(onSubmit).toHaveBeenCalledWith({
             anagraphic: {
@@ -176,5 +178,74 @@ describe('Validate empty form with default values', () => {
 
     it('Should respect default value', async () => {
         expect(enabledField).toBeChecked();
+    });
+});
+
+describe('Validate form with initially disabled property', () => {
+    // Define handles
+    let emailField: HTMLInputElement;
+    let roleField: HTMLSelectElement;
+    let enabledField: HTMLInputElement;
+    let firstNameField: HTMLInputElement;
+    let lastNameField: HTMLInputElement;
+    let ageField: HTMLInputElement;
+    let organizationNameField: HTMLInputElement;
+    let organizationVatField: HTMLInputElement;
+    let submitButton: HTMLButtonElement;
+    let emailErrors: HTMLElement;
+    let roleErrors: HTMLElement;
+    let enabledErrors: HTMLElement;
+    let firstNameErrors: HTMLElement;
+    let lastNameErrors: HTMLElement;
+    let ageErrors: HTMLElement;
+    let organizationNameErrors: HTMLElement;
+    let organizationVatErrors: HTMLElement;
+    const onSubmit = vi.fn();
+
+    beforeEach(() => {
+        // Setup
+        const { getByTestId } = render(
+            <AddUserForm onSubmit={onSubmit} defaultEnabled={false} initiallyDisabled />
+        );
+
+        // Get the inputs
+        emailField = getByTestId('email-field') as HTMLInputElement;
+        roleField = getByTestId('role-field') as HTMLSelectElement;
+        enabledField = getByTestId('enabled-field') as HTMLInputElement;
+        firstNameField = getByTestId('anagraphic.firstName-field') as HTMLInputElement;
+        lastNameField = getByTestId('anagraphic.lastName-field') as HTMLInputElement;
+        ageField = getByTestId('anagraphic.age-field') as HTMLInputElement;
+        organizationNameField = getByTestId('organization.name-field') as HTMLInputElement;
+        organizationVatField = getByTestId('organization.vat-field') as HTMLInputElement;
+
+        // Get the errors
+        emailErrors = getByTestId('email-errors');
+        roleErrors = getByTestId('role-errors');
+        enabledErrors = getByTestId('enabled-errors');
+        firstNameErrors = getByTestId('anagraphic.firstName-errors');
+        lastNameErrors = getByTestId('anagraphic.lastName-errors');
+        ageErrors = getByTestId('anagraphic.age-errors');
+        organizationNameErrors = getByTestId('organization.name-errors');
+        organizationVatErrors = getByTestId('organization.vat-errors');
+
+        // Get submit button
+        submitButton = getByTestId('submit-button') as HTMLButtonElement;
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('Should show immediate validation on enter', async () => {
+        // Type valid top level fields
+        await userEvent.type(emailField, 'user');
+        await userEvent.keyboard('{enter}');
+
+        // Expect errors on all required fields
+        expect(emailErrors.childElementCount).toBe(1);
+        expect(roleErrors.childElementCount).toBe(1);
+        expect(firstNameErrors.childElementCount).toBe(1);
+        expect(lastNameErrors.childElementCount).toBe(1);
+        expect(ageErrors.childElementCount).toBe(1);
     });
 });

@@ -55,7 +55,7 @@ beforeEach(() => {
     lastNameErrors = screen.getByTestId('lastName-errors');
 
     // Get submit button
-    submitButton = screen.getByTestId('submit-buttom');
+    submitButton = screen.getByTestId('submit-button');
 
     // Get submit button
     reactiveTextDiv = screen.getByTestId('reactive-text');

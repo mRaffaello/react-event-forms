@@ -1,3 +1,5 @@
+import { ZodObject } from 'zod';
+
 export const getPropertyValueByDottedPath = (o: any, s: string) => {
     s = s.replace(/\[(\w+)\]/g, '.$1');
     s = s.replace(/^\./, '');
@@ -42,5 +44,25 @@ export const setObjectNestedProperty = (_obj: any, inputKey: string, inputValue:
     }
 
     // Return the updated object
+    return obj;
+};
+
+export const initializeEmptyObject = (schema: ZodObject<any>): any => {
+    if (schema._def.shape && typeof schema._def.shape === 'function') {
+        return _initializeEmptyObject(schema._def.shape());
+    } else return _initializeEmptyObject((schema._def as any).schema.shape);
+};
+
+export const _initializeEmptyObject = (shape: any): any => {
+    const obj: any = {};
+
+    for (const [key, value] of Object.entries(shape)) {
+        if ((value as any)._def.typeName === 'ZodObject') {
+            const res = _initializeEmptyObject((value as any)._def.shape());
+
+            obj[key] = _initializeEmptyObject((value as any)._def.shape());
+        }
+    }
+
     return obj;
 };

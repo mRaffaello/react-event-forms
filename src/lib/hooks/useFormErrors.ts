@@ -14,7 +14,7 @@ export function useFormErrors() {
     const [errors, setErrors] = useState<ZodIssue[] | undefined>(getFormErrors());
 
     // Methods
-    const onFormInputErrorsUpdates = (_: string, errors?: ZodIssue[]) => {
+    const onFormInputErrorsUpdates = (_?: string, errors?: ZodIssue[]) => {
         setErrors(errors);
     };
 

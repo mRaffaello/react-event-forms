@@ -40,7 +40,7 @@ beforeEach(() => {
     passwordErrors = screen.getByTestId('password-errors');
 
     // Get submit button
-    submitButton = screen.getByTestId('submit-buttom');
+    submitButton = screen.getByTestId('submit-button');
 
     // Check that there are initially no errors
     expect(emailErrors.childElementCount).toBe(0);

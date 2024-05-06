@@ -1,16 +1,21 @@
-import { useEffect } from 'react';
+import { ChangeEventHandler, useEffect } from 'react';
 import { ReInputRendererProps } from '../../lib';
+
+type BooleanOrUndefinableBoolean = boolean | (boolean | undefined);
 
 type RenderCountProps = {
     onRenderCount?: () => void;
 };
 
-export function CheckboxRenderer(props: ReInputRendererProps<boolean> & RenderCountProps) {
+export function CheckboxRenderer<T extends BooleanOrUndefinableBoolean>(
+    props: ReInputRendererProps<T> & RenderCountProps
+) {
     // Props
     const { value, defaultValue, errors, onChange, onBlur } = props;
 
     // Methods
-    const _onChange: React.ChangeEventHandler<HTMLInputElement> = e => onChange(e.target.checked);
+    const _onChange: ChangeEventHandler<HTMLInputElement> = e =>
+        onChange((e.target as any).checked);
 
     // Effects
     useEffect(() => {
@@ -28,7 +33,7 @@ export function CheckboxRenderer(props: ReInputRendererProps<boolean> & RenderCo
                 }}>
                 <input
                     type='checkbox'
-                    checked={value !== undefined ? value : props.defaultValue ?? false}
+                    checked={value !== undefined ? value : defaultValue ?? false}
                     onChange={_onChange}
                     onBlur={onBlur}
                     data-testid={`${props.property}-field`}

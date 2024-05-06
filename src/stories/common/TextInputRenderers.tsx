@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { ChangeEventHandler, useEffect } from 'react';
 import { ReInputRendererProps } from '../../lib';
 
 type StringOrUndefinableString = string | (string | undefined);
@@ -15,8 +15,7 @@ function BaseInputRenderer<T extends StringOrUndefinableString>(
     const { value, errors, onChange, onBlur, type } = props;
 
     // Methods
-    const _onChange: React.ChangeEventHandler<HTMLInputElement> = e =>
-        onChange(e.target.value as T);
+    const _onChange: ChangeEventHandler<HTMLInputElement> = e => onChange(e.target.value as T);
 
     // Effects
     useEffect(() => {
