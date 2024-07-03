@@ -7,6 +7,7 @@ import {
     initializeEmptyObject,
     setObjectNestedProperty
 } from '../../utils/objects';
+import { ReFormEffect } from './ReFormEffect';
 
 export type FormInputErrorsObserver = (
     inputKey?: string,
@@ -14,7 +15,7 @@ export type FormInputErrorsObserver = (
     overrideBlurRequirement?: boolean
 ) => void;
 export type FormValueObserver = () => void;
-export type FormForceValueObserver = () => void;
+export type FormForceValueObserver = (inputKeys: string[]) => void;
 
 export type ZodDefinition = z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>>;
 
@@ -67,6 +68,9 @@ export type ReFormProps<I> = {
     isLoading?: boolean;
     onSubmit?: (value: I) => void;
 
+    // Apply some transformation to the form value based on the previous value and the next value compute a transformed value. This gets executed before any UI updates
+    effects?: ReFormEffect<I>[];
+
     renderer?: (props: { children: ReactNode; onSubmit: () => void }) => JSX.Element;
 };
 
@@ -78,6 +82,9 @@ const getInitialErrors = <I,>(validator: ZodDefinition, initialValue?: I) => {
 };
 
 export function ReForm<I>(props: ReFormProps<I>) {
+    const _requiresFirstChangeToEnable =
+        props.requiresFirstChangeToEnable === undefined ? true : props.requiresFirstChangeToEnable;
+
     // References
     const formValidatorRef = useRef<ZodDefinition>(props.validator);
     const formValueRef = useRef<I | undefined>(
@@ -105,20 +112,6 @@ export function ReForm<I>(props: ReFormProps<I>) {
 
         // Submit
         props.onSubmit?.(formValue);
-    };
-
-    const setFormValue = (value: any) => {
-        formValueRef.current = value;
-        notifyFormValueSubscribers();
-        notifyFormForceValueSubscribers();
-    };
-
-    const clearForm = () => {
-        // Remove values
-        formValueRef.current = undefined;
-
-        // Remove results
-        formIssuesRef.current = undefined;
     };
 
     // Set a default value without re-renders
@@ -152,6 +145,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
         if (!validator) throw new Error('Form not initialized');
 
         // Update form values
+        const prevFormValue = formValueRef.current;
         if (inputKey.includes('.')) {
             formValueRef.current = setObjectNestedProperty(
                 formValueRef.current,
@@ -164,6 +158,28 @@ export function ReForm<I>(props: ReFormProps<I>) {
                 [inputKey]: inputValue
             } as I;
         }
+
+        // Apply effects in order
+        const updatedProperties: string[] = [];
+        for (const effect of props.effects ?? []) {
+            // Skip if deps does not contain updated key
+            if (!effect.shouldActivate(inputKey, inputValue, prevFormValue, formValueRef.current))
+                continue;
+
+            // Apply tranformation
+            const effectResult = effect.transformValue(prevFormValue, formValueRef.current);
+
+            // Assign new value
+            formValueRef.current = effectResult?.value;
+
+            // Add updated properties to the list
+            effectResult?.effectedKeys.forEach(d => {
+                if (!updatedProperties.includes(d)) updatedProperties.push(d);
+            });
+        }
+
+        // Force update effect fields
+        notifyFormForceValueSubscribers(updatedProperties);
 
         // Notify subscribers
         notifyFormValueSubscribers();
@@ -212,7 +228,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
 
     const getFormErrors = () => {
         let isEqual = false;
-        if (props.requiresFirstChangeToEnable && initialValueRef.current) {
+        if (_requiresFirstChangeToEnable && initialValueRef.current) {
             isEqual = areObjectsEqual(formValueRef.current, initialValueRef.current);
         }
 
@@ -285,8 +301,8 @@ export function ReForm<I>(props: ReFormProps<I>) {
         );
     };
 
-    const notifyFormForceValueSubscribers = () => {
-        formForceValueObserversRef.current.forEach(observer => observer());
+    const notifyFormForceValueSubscribers = (inputKeys: string[]) => {
+        formForceValueObserversRef.current.forEach(observer => observer(inputKeys));
     };
 
     // Render
@@ -313,10 +329,6 @@ export function ReForm<I>(props: ReFormProps<I>) {
         </FormContext.Provider>
     );
 }
-
-ReForm.defaultProps = {
-    requiresFirstChangeToEnable: true
-};
 
 export const DefaultFormRenderer = (props: ReFormRendererProps) => {
     // Methods

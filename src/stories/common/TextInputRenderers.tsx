@@ -9,7 +9,8 @@ type RenderCountProps = {
 };
 
 function BaseInputRenderer<T extends StringOrUndefinableString>(
-    props: ReInputRendererProps<T> & RenderCountProps & { type?: 'email' | 'string' | 'password' }
+    props: ReInputRendererProps<T> &
+        RenderCountProps & { type?: 'email' | 'string' | 'password'; disabled?: boolean }
 ) {
     // Props
     const { value, errors, onChange, onBlur, type } = props;
@@ -28,6 +29,7 @@ function BaseInputRenderer<T extends StringOrUndefinableString>(
             <p>{props.property}</p>
             <input
                 type={type}
+                disabled={props.disabled}
                 value={value === undefined ? '' : value}
                 onChange={_onChange}
                 onBlur={onBlur}
@@ -41,19 +43,19 @@ function BaseInputRenderer<T extends StringOrUndefinableString>(
 }
 
 export const TextInputRenderer = <T extends StringOrUndefinableString>(
-    props: ReInputRendererProps<T> & RenderCountProps
+    props: ReInputRendererProps<T> & RenderCountProps & { disabled?: boolean }
 ) => <BaseInputRenderer {...props} type='string' />;
 
 export const EmailInputRenderer = <T extends StringOrUndefinableString>(
-    props: ReInputRendererProps<T> & RenderCountProps
+    props: ReInputRendererProps<T> & RenderCountProps & { disabled?: boolean }
 ) => <BaseInputRenderer {...props} type='email' />;
 
 export const PasswordInputRenderer = <T extends StringOrUndefinableString>(
-    props: ReInputRendererProps<T> & RenderCountProps
+    props: ReInputRendererProps<T> & RenderCountProps & { disabled?: boolean }
 ) => <BaseInputRenderer {...props} type='password' />;
 
 export function NumberInputRenderer<T extends NumberOrUndefinableNumber>(
-    props: ReInputRendererProps<T> & RenderCountProps
+    props: ReInputRendererProps<T> & RenderCountProps & { disabled?: boolean }
 ) {
     // Props
     const { value, errors, onChange, onBlur } = props;

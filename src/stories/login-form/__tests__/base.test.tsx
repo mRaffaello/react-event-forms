@@ -1,10 +1,9 @@
-import { it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { it, expect, beforeEach, vi, afterEach, describe } from 'vitest';
 import { fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // To Test
 import { LoginForm } from '../LoginForm';
-import { describe } from 'node:test';
 
 describe('Validate form without initial values', () => {
     // Define handles
