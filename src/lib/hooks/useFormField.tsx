@@ -4,17 +4,26 @@ import { ExtractFieldType, NestedKeyOf } from '../types/structs';
 import { useMemo } from 'react';
 
 export function useFormField<T extends ZodType<any, any, any>>() {
-    type InferedType = z.infer<T>;
+    type InferredType = z.infer<T>;
 
-    return useMemo(
-        () => ({
-            field: <Property extends NestedKeyOf<InferedType>>(
-                props: ReInputProps<Property, ExtractFieldType<InferedType, Property>>
+    const Field = useMemo(
+        () =>
+            <Property extends NestedKeyOf<InferredType>>(
+                props: ReInputProps<Property, ExtractFieldType<InferredType, Property>>
             ) => <ReInput {...props} />,
-            safeField: <Property extends NestedKeyOf<InferedType>>(
-                props: ReInputProps<Property, NonNullable<ExtractFieldType<InferedType, Property>>>
-            ) => <ReInput {...props} />
-        }),
         []
     );
+
+    const SafeField = useMemo(
+        () =>
+            <Property extends NestedKeyOf<InferredType>>(
+                props: ReInputProps<Property, NonNullable<ExtractFieldType<InferredType, Property>>>
+            ) => <ReInput {...props} />,
+        []
+    );
+
+    return {
+        field: Field,
+        safeField: SafeField
+    };
 }

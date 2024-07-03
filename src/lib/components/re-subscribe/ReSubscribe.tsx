@@ -14,5 +14,5 @@ export function ReSubscribe<T, R>(props: ReSubscribeProps<T, R>) {
     const subscribedValue = useMemo(() => props.selector(value), [value, props.selector]);
 
     // Render
-    return useMemo(() => props.children(subscribedValue), [subscribedValue]);
+    return useMemo(() => props.children(subscribedValue), [subscribedValue, props.children]);
 }

@@ -179,7 +179,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
         }
 
         // Force update effect fields
-        notifyFormForceValueSubscribers(updatedProperties);
+        if (updatedProperties.length) notifyFormForceValueSubscribers(updatedProperties);
 
         // Notify subscribers
         notifyFormValueSubscribers();
