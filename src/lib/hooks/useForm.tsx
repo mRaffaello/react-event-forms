@@ -44,7 +44,6 @@ export function useForm<T extends ZodType<any, any, any>>(validator: T, initialV
         []
     );
 
-    console.log('JDOISJDOISAJOIDSAJOIDSJAOI');
     return {
         context: Context,
         field: Field,
