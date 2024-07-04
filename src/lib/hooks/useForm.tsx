@@ -1,10 +1,12 @@
 import { ReInput, ReInputProps } from '../components';
 import { ZodType, z } from 'zod';
 import { ReForm, ReButton, ReSubscribe, ReFormProps, ZodDefinition } from '../components';
-import { ReactNode, useMemo, useRef } from 'react';
+import { ReactNode, useCallback, useMemo, useRef } from 'react';
 import { DeepPartial, ExtractFieldType, NestedKeyOf } from '../types/structs';
 import { generateRandomString } from '../utils/random';
-import useFormActions from './useFormActions';
+import { useFormActions } from './useFormActions';
+import { APP_EVENT } from '../types/events';
+import { eventEmitter } from '../utils/events';
 
 export function useForm<T extends ZodType<any, any, any>>(validator: T, initialValue?: z.infer<T>) {
     // References
@@ -29,7 +31,7 @@ function _useForm<T extends ZodType<any, any, any>>(
     type InferredType = z.infer<T>;
 
     // Hooks
-    const actions = useFormActions(id);
+    const actions = useFormActions<InferredType>(id);
 
     // Memos
     const Context = useMemo(
@@ -61,8 +63,19 @@ function _useForm<T extends ZodType<any, any, any>>(
         []
     );
 
+    // Action copied from useFormAction. Typescript inference was causing problem with nested hooks
+    const setFormValue = useCallback((value: InferredType, reset = true) => {
+        eventEmitter.emit(APP_EVENT.SET_FORM_VALUE, id, value, reset);
+    }, []);
+
+    // Action copied from useFormAction. Typescript inference was causing problem with nested hooks
+    const submitForm = useCallback(() => {
+        eventEmitter.emit(APP_EVENT.SUBMIT_FORM, id);
+    }, []);
+
     return {
-        ...actions,
+        setFormValue,
+        submitForm,
         context: Context,
         field: Field,
         subscribe: Subscribe,
