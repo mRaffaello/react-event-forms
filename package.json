@@ -1,7 +1,7 @@
 {
     "name": "react-event-forms",
     "private": false,
-    "version": "0.4.3",
+    "version": "0.4.4",
     "author": "Marco Raffaello",
     "repository": {
         "type": "git",
@@ -46,8 +46,8 @@
         "@storybook/react": "^8.0.8",
         "@storybook/react-vite": "^8.0.8",
         "@storybook/test": "^8.0.8",
-        "@testing-library/jest-dom": "^6.4.2",
-        "@testing-library/react": "^15.0.2",
+        "@testing-library/jest-dom": "^6.4.6",
+        "@testing-library/react": "^16.0.0",
         "@testing-library/user-event": "^14.5.2",
         "@types/node": "20.4.9",
         "@types/react": "18.2.20",
@@ -93,5 +93,8 @@
         "*.{ts,tsx,js,jsx,json,css,md}": [
             "prettier -w"
         ]
+    },
+    "dependencies": {
+        "eventemitter3": "^5.0.1"
     }
 }

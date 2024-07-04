@@ -1,0 +1,4 @@
+export enum APP_EVENT {
+    SET_FORM_VALUE = 'SET_FORM_VALUE',
+    SUBMIT_FORM = 'SUBMIT_FORM'
+}

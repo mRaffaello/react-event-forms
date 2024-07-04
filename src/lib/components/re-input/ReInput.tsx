@@ -99,8 +99,8 @@ export function ReInput<T, R>(props: ReInputProps<T, R>) {
         else if (props.validationBehaviour !== 'onSubmit') setErrors(inputErrors);
     };
 
-    const onForceValueUpdate = (updatedKeys: string[]) => {
-        if (updatedKeys.includes(props.property as string))
+    const onForceValueUpdate = (updatedKeys?: string[]) => {
+        if (!updatedKeys || updatedKeys.includes(props.property as string))
             setValue(getFormInputValue(props.property as string));
     };
 

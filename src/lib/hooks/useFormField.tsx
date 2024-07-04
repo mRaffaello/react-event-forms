@@ -14,16 +14,7 @@ export function useFormField<T extends ZodType<any, any, any>>() {
         []
     );
 
-    const SafeField = useMemo(
-        () =>
-            <Property extends NestedKeyOf<InferredType>>(
-                props: ReInputProps<Property, NonNullable<ExtractFieldType<InferredType, Property>>>
-            ) => <ReInput {...props} />,
-        []
-    );
-
     return {
-        field: Field,
-        safeField: SafeField
+        field: Field
     };
 }

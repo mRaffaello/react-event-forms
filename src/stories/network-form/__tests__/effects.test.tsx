@@ -1,5 +1,5 @@
 import { it, expect, beforeEach, vi, afterEach, describe } from 'vitest';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { NetworkForm, networkFormEffect, defaultValue } from '../NetworkForm';
 import userEvent from '@testing-library/user-event';
 
@@ -27,7 +27,7 @@ describe('Validate form with effects', () => {
         submitButton = getByTestId('submit-button') as HTMLButtonElement;
 
         // Check that there are initially no errors
-        expect(ipField.childElementCount).toBe(0);
+        expect(ipErrors.childElementCount).toBe(0);
     });
 
     afterEach(() => {

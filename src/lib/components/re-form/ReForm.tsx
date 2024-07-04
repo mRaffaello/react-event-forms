@@ -1,4 +1,4 @@
-import { createContext, FormEventHandler, useRef } from 'react';
+import { createContext, FormEventHandler, useEffect, useRef } from 'react';
 import { ReactNode } from 'react';
 import { ZodIssue, z } from 'zod';
 import { areObjectsEqual } from '../../utils/equals';
@@ -8,6 +8,8 @@ import {
     setObjectNestedProperty
 } from '../../utils/objects';
 import { ReFormEffect } from './ReFormEffect';
+import { eventEmitter } from '../../utils/events';
+import { APP_EVENT } from '../../types/events';
 
 export type FormInputErrorsObserver = (
     inputKey?: string,
@@ -15,7 +17,7 @@ export type FormInputErrorsObserver = (
     overrideBlurRequirement?: boolean
 ) => void;
 export type FormValueObserver = () => void;
-export type FormForceValueObserver = (inputKeys: string[]) => void;
+export type FormForceValueObserver = (inputKeys?: string[]) => void;
 
 export type ZodDefinition = z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>>;
 
@@ -58,6 +60,7 @@ export type ReFormRendererProps = {
 };
 
 export type ReFormProps<I> = {
+    id: string;
     children: ReactNode;
 
     validator: ZodDefinition;
@@ -200,6 +203,32 @@ export function ReForm<I>(props: ReFormProps<I>) {
         notifyFormInputErrorsSubscribers(inputKey);
     };
 
+    const actionSubmit = (formId: string) => {
+        // Ignore if form is not valid
+        if (formId !== props.id) return;
+
+        onSubmit();
+    };
+
+    const actionSetFormValue = (formId: string, formValue: I, reset = true) => {
+        // Ignore if form is not valid
+        if (formId !== props.id) return;
+
+        // Set form value
+        formValueRef.current = formValue;
+
+        // Reset other values if specified
+        if (reset) {
+            initialValueRef.current = formValue;
+        }
+
+        // Re validate
+        validateFormValue();
+
+        // Force updates
+        notifyFormForceValueSubscribers();
+    };
+
     const validateFormValue = () => {
         // Check if it's already present
         const validator = formValidatorRef.current;
@@ -301,9 +330,20 @@ export function ReForm<I>(props: ReFormProps<I>) {
         );
     };
 
-    const notifyFormForceValueSubscribers = (inputKeys: string[]) => {
+    const notifyFormForceValueSubscribers = (inputKeys?: string[]) => {
         formForceValueObserversRef.current.forEach(observer => observer(inputKeys));
     };
+
+    // Effects
+    useEffect(() => {
+        eventEmitter.on(APP_EVENT.SET_FORM_VALUE, actionSetFormValue);
+        eventEmitter.on(APP_EVENT.SUBMIT_FORM, actionSubmit);
+
+        return () => {
+            eventEmitter.off(APP_EVENT.SET_FORM_VALUE, actionSetFormValue);
+            eventEmitter.off(APP_EVENT.SUBMIT_FORM, actionSubmit);
+        };
+    }, []);
 
     // Render
     return (

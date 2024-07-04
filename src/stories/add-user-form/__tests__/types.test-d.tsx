@@ -53,12 +53,6 @@ it('Should type useForm hook correctly', () => {
         .toHaveProperty('property')
         .toEqualTypeOf<ExpectedNestedKeyOfResult>();
 
-    // Check form.safeField types
-    expectTypeOf(result.current.safeField)
-        .parameter(0)
-        .toHaveProperty('property')
-        .toEqualTypeOf<ExpectedNestedKeyOfResult>();
-
     // Check form.subscribe types
     // Todo
 
