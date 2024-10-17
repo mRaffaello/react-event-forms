@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 // To Test
 import userEvent from '@testing-library/user-event';
 import { FilterForm } from '../FilterForm';
+import { NetworkForm } from '../../network-form/NetworkForm';
 
 describe('Validate form with default behaviour', () => {
     // Define handles
@@ -210,5 +211,62 @@ describe('Validate form with onSubmit behaviour', () => {
         // Submit
         await userEvent.click(submitButton);
         expect(endDateErrors.childElementCount).toBe(1);
+    });
+});
+
+describe('Validate pre-compiled form with any behaviour', () => {
+    // Define handles
+    let ipField: HTMLInputElement;
+    let subnetField: HTMLInputElement;
+    let ipErrors: HTMLElement;
+    let submitButton: HTMLButtonElement;
+
+    const onSubmit = vi.fn();
+
+    beforeEach(() => {
+        // Setup
+        const { getByTestId } = render(<NetworkForm onSubmit={onSubmit} />);
+
+        // Get the inputs
+        ipField = getByTestId('ip-field') as HTMLInputElement;
+        subnetField = getByTestId('subnet-field') as HTMLInputElement;
+
+        // Get the errors
+        ipErrors = getByTestId('ip-errors');
+
+        // Get buttons
+        submitButton = getByTestId('submit-button') as HTMLButtonElement;
+
+        // Check that there are initially no errors
+        expect(ipErrors.childElementCount).toBe(0);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('Should validate after first change', async () => {
+        // Button should initially be disabled
+        expect(submitButton).toBeDisabled();
+
+        await userEvent.type(ipField, '{backspace}');
+        expect(submitButton).toBeEnabled();
+    });
+
+    it('Should form be disables if form has not changed ', async () => {
+        // Button should initially be disabled
+        expect(submitButton).toBeDisabled();
+
+        await userEvent.type(ipField, '{backspace}');
+        expect(submitButton).toBeEnabled();
+
+        await userEvent.type(subnetField, '0');
+        expect(submitButton).toBeEnabled();
+
+        await userEvent.type(ipField, '0');
+        expect(submitButton).toBeEnabled();
+
+        await userEvent.type(subnetField, '{backspace}');
+        expect(submitButton).toBeDisabled();
     });
 });

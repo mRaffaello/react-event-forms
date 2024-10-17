@@ -34,7 +34,8 @@ export function ReInput<T, R>(props: ReInputProps<T, R>) {
         subscribeToFormInputErrorsUpdates,
         subscribeToFormForceValueUpdates,
         unsubscribeFromFormInputErrorsUpdates,
-        unsubscribeFromFormForceValueUpdates
+        unsubscribeFromFormForceValueUpdates,
+        getFormHasChanged
     } = useContext(FormContext);
 
     // State
@@ -60,6 +61,10 @@ export function ReInput<T, R>(props: ReInputProps<T, R>) {
             if (hasBeenBlurredBeforeRef.current && props.validationBehaviour !== 'onSubmit') {
                 setErrors(_errors);
             }
+
+            // Check if the form's value has changed
+            getFormHasChanged();
+
             setValue(value);
         });
     };
@@ -78,7 +83,9 @@ export function ReInput<T, R>(props: ReInputProps<T, R>) {
         const formErrors = getFormErrors();
         const inputErrors = formErrors?.filter(fe => fe.path.join('.') === props.property);
 
-        if (props.validationBehaviour !== 'onSubmit') setErrors(inputErrors);
+        if (props.validationBehaviour !== 'onSubmit') {
+            setErrors(inputErrors);
+        }
     };
 
     // TODO: this is wrong when called after a form validation

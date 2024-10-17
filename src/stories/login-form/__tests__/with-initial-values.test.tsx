@@ -63,7 +63,7 @@ describe('Validate form with correct initial values', () => {
 
         await userEvent.type(emailField, '{backspace}');
 
-        expect(submitButton).toBeEnabled();
+        expect(submitButton).toBeDisabled();
     });
 });
 

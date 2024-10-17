@@ -4,7 +4,6 @@ import { ReForm, ReButton, ReSubscribe, ReFormProps, ZodDefinition } from '../co
 import { ReactNode, useCallback, useMemo, useRef } from 'react';
 import { DeepPartial, ExtractFieldType, NestedKeyOf } from '../types/structs';
 import { generateRandomString } from '../utils/random';
-import { useFormActions } from './useFormActions';
 import { APP_EVENT } from '../types/events';
 import { eventEmitter } from '../utils/events';
 
@@ -30,9 +29,6 @@ function _useForm<T extends ZodType<any, any, any>>(
 ) {
     type InferredType = z.infer<T>;
 
-    // Hooks
-    const actions = useFormActions<InferredType>(id);
-
     // Memos
     const Context = useMemo(
         () => (props: Omit<ReFormProps<InferredType>, 'id' | 'validator' | 'initialValue'>) => (
@@ -50,7 +46,16 @@ function _useForm<T extends ZodType<any, any, any>>(
         () =>
             <Property extends NestedKeyOf<InferredType>>(
                 props: ReInputProps<Property, ExtractFieldType<InferredType, Property>>
-            ) => <ReInput {...props} />,
+            ) => (
+                <ReInput
+                    {...props}
+                    /* validationBehaviour={
+                        getPropertyValueByDottedPath(initialValue, props.property)
+                            ? 'immediate'
+                            : props.validationBehaviour
+                    } */
+                />
+            ),
         []
     );
 

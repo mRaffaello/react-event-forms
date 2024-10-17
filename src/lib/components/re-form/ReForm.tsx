@@ -17,6 +17,7 @@ export type FormInputErrorsObserver = (
     overrideBlurRequirement?: boolean
 ) => void;
 export type FormValueObserver = () => void;
+export type FormHasChangedObserver = (hasChanged: boolean) => void;
 export type FormForceValueObserver = (inputKeys?: string[]) => void;
 
 export type ZodDefinition = z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>>;
@@ -32,10 +33,13 @@ type FormContextType = {
     getFormValue: () => any;
     getFormInputValue: (inputKey: string) => any;
     getFormErrors: () => z.ZodIssue[] | undefined;
+    getFormHasChanged: () => void;
 
     // Observable
     subscribeToFormInputErrorsUpdates: (observer: FormInputErrorsObserver) => void;
     unsubscribeFromFormInputErrorsUpdates: (observer: FormInputErrorsObserver) => void;
+    subscribeToFormHasChanged: (observer: FormHasChangedObserver) => void;
+    unsubscribeFromFormHasChanged: (observer: FormHasChangedObserver) => void;
     subscribeToFormValueUpdates: (observer: FormValueObserver) => void;
     unsubscribeFromFormValueUpdates: (observer: FormValueObserver) => void;
     subscribeToFormForceValueUpdates: (observer: FormForceValueObserver) => void;
@@ -100,6 +104,7 @@ export function ReForm<I>(props: ReFormProps<I>) {
     const initialValueRef = useRef(props.initialValue);
 
     const formInputErrorsObserversRef = useRef<FormInputErrorsObserver[]>([]);
+    const formHasChangedObserversRef = useRef<FormHasChangedObserver[]>([]);
     const formValueObserversRef = useRef<FormValueObserver[]>([]);
     const formForceValueObserversRef = useRef<FormForceValueObserver[]>([]);
 
@@ -255,21 +260,17 @@ export function ReForm<I>(props: ReFormProps<I>) {
         }
     };
 
-    const getFormErrors = () => {
+    const getFormHasChanged = () => {
         let isEqual = false;
         if (_requiresFirstChangeToEnable && initialValueRef.current) {
             isEqual = areObjectsEqual(formValueRef.current, initialValueRef.current);
         }
 
-        return isEqual
-            ? [
-                  ...(formIssuesRef.current ?? []),
-                  {
-                      path: ['global'],
-                      message: 'At least one change is required to activate the form'
-                  } as ZodIssue
-              ]
-            : formIssuesRef.current;
+        notifyFormHasChanged(!isEqual);
+    };
+
+    const getFormErrors = () => {
+        return formIssuesRef.current;
     };
 
     const getFormValue = () => {
@@ -334,6 +335,21 @@ export function ReForm<I>(props: ReFormProps<I>) {
         formForceValueObserversRef.current.forEach(observer => observer(inputKeys));
     };
 
+    // Form has changed
+    const subscribeToFormHasChanged = (observer: FormHasChangedObserver) => {
+        formHasChangedObserversRef.current.push(observer);
+    };
+
+    const unsubscribeFromFormHasChanged = (observerToRemove: FormHasChangedObserver) => {
+        formHasChangedObserversRef.current = formHasChangedObserversRef.current.filter(
+            observer => observerToRemove !== observer
+        );
+    };
+
+    const notifyFormHasChanged = (hasChanged: boolean) => {
+        formHasChangedObserversRef.current.forEach(observer => observer(hasChanged));
+    };
+
     // Effects
     useEffect(() => {
         eventEmitter.on(APP_EVENT.SET_FORM_VALUE, actionSetFormValue);
@@ -359,7 +375,10 @@ export function ReForm<I>(props: ReFormProps<I>) {
                 subscribeToFormValueUpdates,
                 unsubscribeFromFormValueUpdates,
                 subscribeToFormForceValueUpdates,
-                unsubscribeFromFormForceValueUpdates
+                unsubscribeFromFormForceValueUpdates,
+                subscribeToFormHasChanged,
+                unsubscribeFromFormHasChanged,
+                getFormHasChanged
             }}>
             {props.renderer ? (
                 <props.renderer onSubmit={onSubmit}>{props.children}</props.renderer>
