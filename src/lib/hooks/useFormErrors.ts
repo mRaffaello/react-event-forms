@@ -5,9 +5,9 @@ import { ZodIssue } from 'zod';
 export function useFormErrors() {
     // Hooks
     const {
-        getFormErrors,
         subscribeToFormInputErrorsUpdates,
-        unsubscribeFromFormInputErrorsUpdates
+        unsubscribeFromFormInputErrorsUpdates,
+        getFormErrors
     } = useContext(FormContext);
 
     // State
