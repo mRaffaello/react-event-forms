@@ -6,6 +6,7 @@ import { DeepPartial, ExtractFieldType, NestedKeyOf } from '../types/structs';
 import { generateRandomString } from '../utils/random';
 import { APP_EVENT } from '../types/events';
 import { eventEmitter } from '../utils/events';
+import { getPropertyValueByDottedPath } from '../utils/objects';
 
 export function useForm<T extends ZodType<any, any, any>>(validator: T, initialValue?: z.infer<T>) {
     // References
@@ -49,11 +50,11 @@ function _useForm<T extends ZodType<any, any, any>>(
             ) => (
                 <ReInput
                     {...props}
-                    /* validationBehaviour={
+                    validationBehaviour={
                         getPropertyValueByDottedPath(initialValue, props.property)
                             ? 'immediate'
                             : props.validationBehaviour
-                    } */
+                    }
                 />
             ),
         []
