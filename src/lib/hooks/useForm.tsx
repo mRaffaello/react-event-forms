@@ -1,4 +1,4 @@
-import { ReInput, ReInputProps } from '../components';
+import { ReButtonRendererProps, ReInput, ReInputProps } from '../components';
 import { ZodType, z } from 'zod';
 import { ReForm, ReButton, ReSubscribe, ReFormProps, ZodDefinition } from '../components';
 import { ReactNode, useCallback, useMemo, useRef } from 'react';
@@ -69,6 +69,13 @@ function _useForm<T extends ZodType<any, any, any>>(
         []
     );
 
+    const Button = useMemo(
+        () => (props: { renderer: (props: ReButtonRendererProps) => JSX.Element }) => (
+            <ReButton formId={id} {...props} />
+        ),
+        []
+    );
+
     // Action copied from useFormAction. Typescript inference was causing problem with nested hooks
     const setFormValue = useCallback((value: InferredType, reset = true) => {
         eventEmitter.emit(APP_EVENT.SET_FORM_VALUE, id, value, reset);
@@ -85,6 +92,6 @@ function _useForm<T extends ZodType<any, any, any>>(
         context: Context,
         field: Field,
         subscribe: Subscribe,
-        button: ReButton
+        button: Button
     };
 }

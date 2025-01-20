@@ -53,7 +53,23 @@ export function ReInput<T, R>(props: ReInputProps<T, R>) {
     const onChange = (value: R | undefined) => {
         const _errors = setInputValue(props.property as string, value);
 
-        startTransition(() => {
+        if (typeof document !== 'undefined') {
+            startTransition(() => {
+                // Immediate validation behaviour should show errors upon first value change
+                if (props.validationBehaviour === 'immediate')
+                    hasBeenBlurredBeforeRef.current = true;
+
+                // Show errors if necessary
+                if (hasBeenBlurredBeforeRef.current && props.validationBehaviour !== 'onSubmit') {
+                    setErrors(_errors);
+                }
+
+                // Check if the form's value has changed
+                getFormHasChanged();
+
+                setValue(value);
+            });
+        } else if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
             // Immediate validation behaviour should show errors upon first value change
             if (props.validationBehaviour === 'immediate') hasBeenBlurredBeforeRef.current = true;
 
@@ -66,7 +82,7 @@ export function ReInput<T, R>(props: ReInputProps<T, R>) {
             getFormHasChanged();
 
             setValue(value);
-        });
+        }
     };
 
     const onBlur = () => {
