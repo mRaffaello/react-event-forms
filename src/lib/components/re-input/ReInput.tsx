@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, startTransition, useRef } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { FormContext } from '../re-form';
 import { z } from 'zod';
 import { ValidationBehaviour } from './types';
@@ -53,36 +53,18 @@ export function ReInput<T, R>(props: ReInputProps<T, R>) {
     const onChange = (value: R | undefined) => {
         const _errors = setInputValue(props.property as string, value);
 
-        if (typeof document !== 'undefined') {
-            startTransition(() => {
-                // Immediate validation behaviour should show errors upon first value change
-                if (props.validationBehaviour === 'immediate')
-                    hasBeenBlurredBeforeRef.current = true;
+        // Immediate validation behaviour should show errors upon first value change
+        if (props.validationBehaviour === 'immediate') hasBeenBlurredBeforeRef.current = true;
 
-                // Show errors if necessary
-                if (hasBeenBlurredBeforeRef.current && props.validationBehaviour !== 'onSubmit') {
-                    setErrors(_errors);
-                }
-
-                // Check if the form's value has changed
-                getFormHasChanged();
-
-                setValue(value);
-            });
-        } else if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
-            // Immediate validation behaviour should show errors upon first value change
-            if (props.validationBehaviour === 'immediate') hasBeenBlurredBeforeRef.current = true;
-
-            // Show errors if necessary
-            if (hasBeenBlurredBeforeRef.current && props.validationBehaviour !== 'onSubmit') {
-                setErrors(_errors);
-            }
-
-            // Check if the form's value has changed
-            getFormHasChanged();
-
-            setValue(value);
+        // Show errors if necessary
+        if (hasBeenBlurredBeforeRef.current && props.validationBehaviour !== 'onSubmit') {
+            setErrors(_errors);
         }
+
+        // Check if the form's value has changed
+        getFormHasChanged();
+
+        setValue(value);
     };
 
     const onBlur = () => {

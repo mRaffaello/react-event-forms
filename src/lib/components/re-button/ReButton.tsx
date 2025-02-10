@@ -1,12 +1,12 @@
 import { useFormIsValid } from '../../hooks';
 
 export type ReButtonRendererProps = {
-    formId: string;
+    formId?: string;
     isFormValid: boolean;
 };
 
 export type ReButtonProps = {
-    formId: string;
+    formId?: string;
     renderer: (props: ReButtonRendererProps) => JSX.Element;
 };
 
