@@ -1,39 +1,35 @@
-// Helper type for handling strings, numbers, and symbols as object keys
-type PathKey = string | number | symbol;
+// Helper type to check if a type is a "primitive object" that shouldn't be recursed into
+export type IsPrimitiveObject<T> = T extends Date
+    ? true
+    : T extends Array<any>
+    ? true
+    : T extends Map<any, any>
+    ? true
+    : T extends Set<any>
+    ? true
+    : T extends RegExp
+    ? true
+    : T extends Function
+    ? true
+    : false;
 
-// Helper to make all properties in an object and its nested objects non-nullable
-type DeepNonNullable<T> = T extends object
-    ? { [K in keyof T]-?: DeepNonNullable<NonNullable<T[K]>> }
-    : NonNullable<T>;
-
-// Limit recursion depth with explicit depth parameter
-type PathsWithDepth<T, Depth extends number> = [Depth] extends [never]
-    ? never
-    : T extends object
-    ? {
-          [K in keyof T]-?: K extends PathKey
-              ? `${K & string}${
-                    | ''
-                    | (T[K] extends object
-                          ? `.${PathsWithDepth<NonNullable<T[K]>, Prev[Depth]>}`
-                          : '')}`
-              : never;
-      }[keyof T]
+// Modified Paths type that doesn't recurse into primitive objects
+export type Paths<T> = T extends object
+    ? IsPrimitiveObject<T> extends true
+        ? never
+        : { [K in keyof T]: `${Exclude<K, symbol>}${'' | `.${Paths<T[K]>}`}` }[keyof T]
     : never;
 
-// Previous number implementation to help limit recursion depth
-type Prev = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+export type NestedKeyOf<T> = Exclude<Paths<T>, undefined>;
 
-// Public API with reasonable default depth
-export type NestedKeyOf<T> = PathsWithDepth<DeepNonNullable<T>, 6>;
-
-// Efficient field type extraction
-export type ExtractFieldType<T, Path extends string> = Path extends keyof T
+export type ExtractFieldType<T, Path extends NestedKeyOf<T>> = Path extends keyof T
     ? T[Path]
     : Path extends `${infer K}.${infer Rest}`
     ? K extends keyof T
         ? T[K] extends object | undefined
-            ? ExtractFieldType<NonNullable<T[K]>, Rest>
+            ? Rest extends NestedKeyOf<NonNullable<T[K]>>
+                ? ExtractFieldType<NonNullable<T[K]>, Rest>
+                : never
             : never
         : never
     : never;
@@ -41,14 +37,3 @@ export type ExtractFieldType<T, Path extends string> = Path extends keyof T
 export type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
-
-// Additional utilities for better type handling
-export type PathValue<T, P extends string> = P extends keyof T
-    ? T[P]
-    : P extends `${infer K}.${infer Rest}`
-    ? K extends keyof T
-        ? T[K] extends object | undefined
-            ? PathValue<NonNullable<T[K]>, Rest>
-            : never
-        : never
-    : never;
