@@ -5,10 +5,12 @@ import { areObjectsEqual } from '../../utils/equals';
 import {
     getPropertyValueByDottedPath,
     initializeEmptyObject,
+    mergePartialIntoObject,
     setObjectNestedProperty
 } from '../../utils/objects';
 import { ReFormEffect } from './ReFormEffect';
 import { eventEmitter } from '../../utils/events';
+import { registerFormValueGetter, unregisterFormValueGetter } from '../../utils/formRegistry';
 import { APP_EVENT } from '../../types/events';
 
 export type FormInputErrorsObserver = (
@@ -216,21 +218,29 @@ export function ReForm<I>(props: ReFormProps<I>) {
     };
 
     const actionSetFormValue = (formId: string, formValue: I, reset = true) => {
-        // Ignore if form is not valid
         if (formId !== props.id) return;
 
-        // Set form value
         formValueRef.current = formValue;
 
-        // Reset other values if specified
         if (reset) {
             initialValueRef.current = formValue;
         }
 
-        // Re validate
         validateFormValue();
+        notifyFormForceValueSubscribers();
+    };
 
-        // Force updates
+    const actionSetPartialFormValue = (formId: string, partialValue: Partial<I>) => {
+        if (formId !== props.id) return;
+
+        const currentValue = formValueRef.current ?? ({} as I);
+        formValueRef.current = mergePartialIntoObject(
+            currentValue as Record<string, unknown>,
+            partialValue as Record<string, unknown>
+        ) as I;
+
+        validateFormValue();
+        notifyFormValueSubscribers();
         notifyFormForceValueSubscribers();
     };
 
@@ -353,13 +363,20 @@ export function ReForm<I>(props: ReFormProps<I>) {
     // Effects
     useEffect(() => {
         eventEmitter.on(APP_EVENT.SET_FORM_VALUE, actionSetFormValue);
+        eventEmitter.on(APP_EVENT.SET_PARTIAL_FORM_VALUE, actionSetPartialFormValue);
         eventEmitter.on(APP_EVENT.SUBMIT_FORM, actionSubmit);
 
         return () => {
             eventEmitter.off(APP_EVENT.SET_FORM_VALUE, actionSetFormValue);
+            eventEmitter.off(APP_EVENT.SET_PARTIAL_FORM_VALUE, actionSetPartialFormValue);
             eventEmitter.off(APP_EVENT.SUBMIT_FORM, actionSubmit);
         };
     }, []);
+
+    useEffect(() => {
+        registerFormValueGetter(props.id, getFormValue);
+        return () => unregisterFormValueGetter(props.id);
+    }, [props.id]);
 
     // Render
     return (

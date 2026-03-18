@@ -7,6 +7,7 @@ import { generateRandomString } from '../utils/random';
 import { APP_EVENT } from '../types/events';
 import { eventEmitter } from '../utils/events';
 import { getPropertyValueByDottedPath } from '../utils/objects';
+import { getFormValueById } from '../utils/formRegistry';
 
 export function useForm<T extends ZodType<any, any, any>>(validator: T, initialValue?: z.infer<T>) {
     // References
@@ -81,14 +82,27 @@ function _useForm<T extends ZodType<any, any, any>>(
         eventEmitter.emit(APP_EVENT.SET_FORM_VALUE, id, value, reset);
     }, []);
 
+    const setPartialFormValue = useCallback(
+        (partialValue: DeepPartial<InferredType>) => {
+            eventEmitter.emit(APP_EVENT.SET_PARTIAL_FORM_VALUE, id, partialValue);
+        },
+        [id]
+    );
+
     // Action copied from useFormAction. Typescript inference was causing problem with nested hooks
     const submitForm = useCallback(() => {
         eventEmitter.emit(APP_EVENT.SUBMIT_FORM, id);
     }, []);
 
+    const getCurrentFormValue = useCallback((): InferredType | undefined => {
+        return getFormValueById<InferredType>(id);
+    }, [id]);
+
     return {
         setFormValue,
+        setPartialFormValue,
         submitForm,
+        getCurrentFormValue,
         context: Context,
         field: Field,
         subscribe: Subscribe,

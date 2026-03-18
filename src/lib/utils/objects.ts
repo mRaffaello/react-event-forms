@@ -15,6 +15,31 @@ export const getPropertyValueByDottedPath = (o: any, s: string) => {
     return o;
 };
 
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+    typeof v === 'object' && v !== null && !Array.isArray(v) && !(v instanceof Date);
+
+/** Merges partial into target. Only keys present in partial are updated; others are left unchanged. */
+export const mergePartialIntoObject = <T extends Record<string, unknown>>(
+    target: T,
+    partial: Partial<T>
+): T => {
+    const result = { ...target };
+    for (const key of Object.keys(partial) as (keyof T)[]) {
+        const partialVal = partial[key];
+        if (partialVal === undefined) continue;
+        const targetVal = result[key];
+        if (isPlainObject(partialVal) && isPlainObject(targetVal)) {
+            (result as any)[key] = mergePartialIntoObject(
+                (targetVal as Record<string, unknown>) ?? {},
+                partialVal as Record<string, unknown>
+            );
+        } else {
+            (result as any)[key] = partialVal;
+        }
+    }
+    return result;
+};
+
 export const setObjectNestedProperty = (_obj: any, inputKey: string, inputValue: any) => {
     const obj = _obj ?? {};
 
