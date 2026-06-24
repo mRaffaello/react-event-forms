@@ -1,0 +1,41 @@
+name: Release library
+
+# Publishes the library to npm. Triggered when a GitHub Release is published
+# (tag must match the version in package.json), or run manually.
+on:
+    release:
+        types: [published]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    id-token: write # required for npm provenance
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            # Installs the exact node + pnpm pinned in mise.toml
+            - name: Setup toolchain (mise)
+              uses: jdx/mise-action@v2
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # tsc (typecheck) + vitest + vite build -> dist/
+            - name: Build library
+              run: pnpm build:lib
+
+            - name: Configure npm auth
+              run: echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc
+
+            # Only the `files` field (dist) is published. --no-git-checks since CI
+            # runs on a detached tag. Provenance is enabled via NPM_CONFIG_PROVENANCE;
+            # remove that env var if your registry/plan doesn't support it.
+            - name: Publish to npm
+              run: pnpm publish --no-git-checks --access public
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  NPM_CONFIG_PROVENANCE: 'true'
