@@ -125,14 +125,20 @@ export function ReInput<T, R>(props: ReInputProps<T, R>) {
     }, []);
 
     // Render
-    return (
-        <props.renderer
-            property={props.property as string}
-            value={value}
-            errors={errors}
-            defaultValue={props.defaultValue}
-            onChange={onChange}
-            onBlur={onBlur}
-        />
-    );
+    // Invoke the renderer as a function (render prop) instead of mounting it as a
+    // component (`<props.renderer />`). Mounting keys reconciliation on the renderer
+    // function's identity, so a consumer that passes a fresh inline renderer on each
+    // render (the common case) would have its produced subtree unmounted + remounted
+    // every render — destroying component state such as an open dropdown, a focused
+    // input, or an open date picker on every parent re-render (e.g. polling).
+    // Calling it returns the subtree directly, so reconciliation keys on the real
+    // element types it produces, which are stable.
+    return props.renderer({
+        property: props.property as string,
+        value,
+        errors,
+        defaultValue: props.defaultValue,
+        onChange,
+        onBlur
+    });
 }
