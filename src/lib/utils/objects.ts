@@ -40,36 +40,29 @@ export const mergePartialIntoObject = <T extends Record<string, unknown>>(
     return result;
 };
 
-export const setObjectNestedProperty = (_obj: any, inputKey: string, inputValue: any) => {
-    const obj = _obj ?? {};
-
+export const setObjectNestedProperty = (_obj: any, inputKey: string, inputValue: any): any => {
     const keys = inputKey.split('.'); // Split the inputKey by dot to get nested keys
 
-    let currentObj: any = obj;
+    // Clone immutably along the path so every touched node (including the root)
+    // gets a new reference. Reference identity is what change detection relies on
+    // to notify subscribers and trigger re-renders.
+    const root = isPlainObject(_obj) ? { ..._obj } : {};
 
-    // Traverse the object based on the keys array
+    let currentObj: any = root;
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
-        if (currentObj === undefined || typeof currentObj !== 'object') {
-            // If currentObj is not an object or undefined, return the original object
-            return obj;
-        }
         if (i === keys.length - 1) {
             // Last key in the chain, update the value
             currentObj[key] = inputValue;
         } else {
-            // Continue to the next nested object
-            if (!(key in currentObj)) {
-                // If the key doesn't exist, create a new object
-                currentObj[key] = {};
-            }
-            // Move to the next nested object
+            // Shallow clone the next level so we never mutate the previous object
+            const next = currentObj[key];
+            currentObj[key] = isPlainObject(next) ? { ...next } : {};
             currentObj = currentObj[key];
         }
     }
 
-    // Return the updated object
-    return obj;
+    return root;
 };
 
 export const initializeEmptyObject = (schema: ZodObject<any>): any => {

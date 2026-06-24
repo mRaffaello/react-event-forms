@@ -159,6 +159,40 @@ describe('Validate form without initial values', () => {
     });
 });
 
+describe('Dirty state with nested fields and initial values', () => {
+    const onSubmit = vi.fn();
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('Should mark the form as changed when editing a nested field', async () => {
+        // Setup with a fully valid initial value
+        const { getByTestId } = render(
+            <AddUserForm
+                onSubmit={onSubmit}
+                initialValue={{
+                    email: 'user@mail.com',
+                    enabled: true,
+                    role: 'VIEWER',
+                    anagraphic: { firstName: 'Mario', lastName: 'Rossi', age: 10 }
+                }}
+            />
+        );
+
+        const firstNameField = getByTestId('anagraphic.firstName-field') as HTMLInputElement;
+        const submitButton = getByTestId('submit-button') as HTMLButtonElement;
+
+        // Pristine valid form requires a change before enabling
+        expect(submitButton).toBeDisabled();
+
+        // Editing a nested field (valid -> valid) must dirty the form
+        await userEvent.type(firstNameField, 'x');
+
+        expect(submitButton).toBeEnabled();
+    });
+});
+
 describe('Validate empty form with default values', () => {
     // Define handles
     let enabledField: HTMLInputElement;
